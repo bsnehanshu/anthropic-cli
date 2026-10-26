@@ -16,6 +16,7 @@ func TestBetaOrganizationExternalKeysCreate(t *testing.T) {
 			"--provider-config", "{kms_arn: arn:aws:kms:us-east-1:111122223333:key/abcd1234-5678-90ab-cdef-000011112222, type: aws, region: us-east-1, role_arn: arn:aws:iam::111122223333:role/anthropic-cmek}",
 			"--display-name", "x",
 			"--geo", "us",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 		)
 	})
 
@@ -28,7 +29,8 @@ func TestBetaOrganizationExternalKeysCreate(t *testing.T) {
 			"  region: us-east-1\n" +
 			"  role_arn: arn:aws:iam::111122223333:role/anthropic-cmek\n" +
 			"display_name: x\n" +
-			"geo: us\n")
+			"geo: us\n" +
+			"user_profile_id: uprof_01SDCCSbTxrXDpWc1phhtcfK\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--base-url", mocktest.ServerWithQuery(t, "beta=true"),

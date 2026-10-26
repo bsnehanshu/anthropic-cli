@@ -19,6 +19,7 @@ func TestBetaOrganizationWorkspacesCreate(t *testing.T) {
 			"--display-color", "#6C5BB9",
 			"--external-key-id", "ekey_01SDCCSbTxrXDpWc1phhtcfK",
 			"--tags", "{env: prod, team: platform}",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 			"--beta", "message-batches-2024-09-24",
 		)
 	})
@@ -39,6 +40,7 @@ func TestBetaOrganizationWorkspacesCreate(t *testing.T) {
 			"--display-color", "#6C5BB9",
 			"--external-key-id", "ekey_01SDCCSbTxrXDpWc1phhtcfK",
 			"--tags", "{env: prod, team: platform}",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 			"--beta", "message-batches-2024-09-24",
 		)
 	})
@@ -55,7 +57,8 @@ func TestBetaOrganizationWorkspacesCreate(t *testing.T) {
 			"external_key_id: ekey_01SDCCSbTxrXDpWc1phhtcfK\n" +
 			"tags:\n" +
 			"  env: prod\n" +
-			"  team: platform\n")
+			"  team: platform\n" +
+			"user_profile_id: uprof_01SDCCSbTxrXDpWc1phhtcfK\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--base-url", mocktest.ServerWithQuery(t, "beta=true"),
@@ -90,6 +93,7 @@ func TestBetaOrganizationWorkspacesUpdate(t *testing.T) {
 			"--external-key-id", "ekey_01SDCCSbTxrXDpWc1phhtcfK",
 			"--name", "x",
 			"--tags", "{env: prod, team: platform}",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 		)
 	})
 
@@ -109,6 +113,7 @@ func TestBetaOrganizationWorkspacesUpdate(t *testing.T) {
 			"--external-key-id", "ekey_01SDCCSbTxrXDpWc1phhtcfK",
 			"--name", "x",
 			"--tags", "{env: prod, team: platform}",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 		)
 	})
 
@@ -123,7 +128,8 @@ func TestBetaOrganizationWorkspacesUpdate(t *testing.T) {
 			"name: x\n" +
 			"tags:\n" +
 			"  env: prod\n" +
-			"  team: platform\n")
+			"  team: platform\n" +
+			"user_profile_id: uprof_01SDCCSbTxrXDpWc1phhtcfK\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--base-url", mocktest.ServerWithQuery(t, "beta=true"),

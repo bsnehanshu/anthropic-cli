@@ -33,6 +33,11 @@ var betaOrganizationExternalKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Data residency geo. Only `us` is supported.",
 			BodyPath: "geo",
 		},
+		&requestflag.Flag[*string]{
+			Name:     "user-profile-id",
+			Usage:    "ID of a user profile to bind the key to. Omit this field for a key that isn't bound to a user profile. Such a key can be attached to a Workspace whatever its user profile. The binding cannot be changed later. A key bound to a user profile can only be attached to a Workspace that has the same user profile.",
+			BodyPath: "user_profile_id",
+		},
 	},
 	Action:          handleBetaOrganizationExternalKeysCreate,
 	HideHelpCommand: true,
@@ -55,7 +60,7 @@ var betaOrganizationExternalKeysCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "provider-config.kms-arn",
-			Usage:      "Full ARN of the AWS KMS key. On Claude Platform on AWS the key must be a single-Region key in your organization's own AWS account; cross-account keys, multi-Region keys, and alias ARNs are rejected.",
+			Usage:      "Full ARN of the AWS KMS key. On Claude Platform on AWS, alias ARNs are rejected, and your organization's own key must be a single-Region key in your organization's AWS account.",
 			InnerField: "kms_arn",
 		},
 		&requestflag.InnerFlag[*string]{
@@ -65,7 +70,7 @@ var betaOrganizationExternalKeysCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[*string]{
 			Name:       "provider-config.role-arn",
-			Usage:      "IAM role ARN. Deprecated — Anthropic reaches the KMS key through its own intermediate role (or, on Claude Platform on AWS, with credentials AWS issues for the Workspace); this field is ignored.",
+			Usage:      "IAM role ARN. Deprecated; this field is ignored.",
 			InnerField: "role_arn",
 		},
 		&requestflag.InnerFlag[string]{
@@ -145,7 +150,7 @@ var betaOrganizationExternalKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "provider-config.kms-arn",
-			Usage:      "Full ARN of the AWS KMS key. On Claude Platform on AWS the key must be a single-Region key in your organization's own AWS account; cross-account keys, multi-Region keys, and alias ARNs are rejected.",
+			Usage:      "Full ARN of the AWS KMS key. On Claude Platform on AWS, alias ARNs are rejected, and your organization's own key must be a single-Region key in your organization's AWS account.",
 			InnerField: "kms_arn",
 		},
 		&requestflag.InnerFlag[*string]{
@@ -155,7 +160,7 @@ var betaOrganizationExternalKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[*string]{
 			Name:       "provider-config.role-arn",
-			Usage:      "IAM role ARN. Deprecated — Anthropic reaches the KMS key through its own intermediate role (or, on Claude Platform on AWS, with credentials AWS issues for the Workspace); this field is ignored.",
+			Usage:      "IAM role ARN. Deprecated; this field is ignored.",
 			InnerField: "role_arn",
 		},
 		&requestflag.InnerFlag[string]{

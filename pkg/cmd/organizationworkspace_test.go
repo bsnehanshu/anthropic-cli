@@ -18,6 +18,7 @@ func TestOrganizationWorkspacesCreate(t *testing.T) {
 			"--display-color", "#6C5BB9",
 			"--external-key-id", "ekey_01SDCCSbTxrXDpWc1phhtcfK",
 			"--tags", "{env: prod, team: platform}",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 		)
 	})
 
@@ -36,6 +37,7 @@ func TestOrganizationWorkspacesCreate(t *testing.T) {
 			"--display-color", "#6C5BB9",
 			"--external-key-id", "ekey_01SDCCSbTxrXDpWc1phhtcfK",
 			"--tags", "{env: prod, team: platform}",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 		)
 	})
 
@@ -51,7 +53,8 @@ func TestOrganizationWorkspacesCreate(t *testing.T) {
 			"external_key_id: ekey_01SDCCSbTxrXDpWc1phhtcfK\n" +
 			"tags:\n" +
 			"  env: prod\n" +
-			"  team: platform\n")
+			"  team: platform\n" +
+			"user_profile_id: uprof_01SDCCSbTxrXDpWc1phhtcfK\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"organization:workspaces", "create",
@@ -82,6 +85,7 @@ func TestOrganizationWorkspacesUpdate(t *testing.T) {
 			"--external-key-id", "ekey_01SDCCSbTxrXDpWc1phhtcfK",
 			"--name", "x",
 			"--tags", "{env: prod, team: platform}",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 		)
 	})
 
@@ -100,6 +104,7 @@ func TestOrganizationWorkspacesUpdate(t *testing.T) {
 			"--external-key-id", "ekey_01SDCCSbTxrXDpWc1phhtcfK",
 			"--name", "x",
 			"--tags", "{env: prod, team: platform}",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 		)
 	})
 
@@ -114,7 +119,8 @@ func TestOrganizationWorkspacesUpdate(t *testing.T) {
 			"name: x\n" +
 			"tags:\n" +
 			"  env: prod\n" +
-			"  team: platform\n")
+			"  team: platform\n" +
+			"user_profile_id: uprof_01SDCCSbTxrXDpWc1phhtcfK\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"organization:workspaces", "update",

@@ -34,13 +34,18 @@ var organizationWorkspacesCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[*string]{
 			Name:     "external-key-id",
-			Usage:    "ID of the customer-managed encryption key (CMEK) configuration to use for this\nWorkspace. Setting this field requires CMEK to be enabled for your\norganization. When set, data stored for this Workspace is encrypted with the\nreferenced key. Create key configurations with the External Keys API. On\nClaude Platform on AWS the value is the AWS KMS key ARN, and the key must be a\nsingle-Region key in the same AWS account and Region as the Workspace. On that\nplatform the key is validated against this Workspace when it is attached, so a\nkey-policy problem is reported as an error on this request. This field is write-once:\nonce a key is attached to a Workspace it cannot be detached or replaced. To\nrotate key material, rotate the underlying key on your cloud KMS; the\n`external_key_id` stays the same.",
+			Usage:    "ID of the customer-managed encryption key (CMEK) configuration to use for this\nWorkspace. Setting this field requires CMEK to be enabled for your\norganization. When set, data stored for this Workspace is encrypted with the\nreferenced key. Create key configurations with the External Keys API. On\nClaude Platform on AWS the value for an AWS KMS key is the key's ARN, and your\norganization's own key must be a single-Region key in the same AWS account and\nRegion as the Workspace. On that platform the key is validated against this\nWorkspace when it is attached, so a key-policy problem is reported as an error\non this request. This field is write-once: once a key is attached to a Workspace\nit cannot be detached or replaced. To rotate key material, rotate the underlying\nkey on your cloud KMS; the `external_key_id` stays the same.",
 			BodyPath: "external_key_id",
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "tags",
 			Usage:    "User-defined tags as string key-value pairs. Keys may not begin with `anthropic`.",
 			BodyPath: "tags",
+		},
+		&requestflag.Flag[*string]{
+			Name:     "user-profile-id",
+			Usage:    "ID of a user profile to attach to the Workspace. Every inference request through the Workspace must then name this user profile; the API rejects a request that names none or a different one. The user profile can't be replaced or removed later; only deleting the user profile clears it.",
+			BodyPath: "user_profile_id",
 		},
 	},
 	Action:          handleOrganizationWorkspacesCreate,
@@ -102,7 +107,7 @@ var organizationWorkspacesUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "external-key-id",
-			Usage:    "ID of the customer-managed encryption key (CMEK) configuration to use for this\nWorkspace. Setting this field requires CMEK to be enabled for your\norganization. When set, data stored for this Workspace is encrypted with the\nreferenced key. Create key configurations with the External Keys API. On\nClaude Platform on AWS the value is the AWS KMS key ARN, and the key must be a\nsingle-Region key in the same AWS account and Region as the Workspace. On that\nplatform the key is validated against this Workspace when it is attached, so a\nkey-policy problem is reported as an error on this request. This field is write-once:\nonce a key is attached to a Workspace it cannot be detached or replaced. To\nrotate key material, rotate the underlying key on your cloud KMS; the\n`external_key_id` stays the same.",
+			Usage:    "ID of the customer-managed encryption key (CMEK) configuration to use for this\nWorkspace. Setting this field requires CMEK to be enabled for your\norganization. When set, data stored for this Workspace is encrypted with the\nreferenced key. Create key configurations with the External Keys API. On\nClaude Platform on AWS the value for an AWS KMS key is the key's ARN, and your\norganization's own key must be a single-Region key in the same AWS account and\nRegion as the Workspace. On that platform the key is validated against this\nWorkspace when it is attached, so a key-policy problem is reported as an error\non this request. This field is write-once: once a key is attached to a Workspace\nit cannot be detached or replaced. To rotate key material, rotate the underlying\nkey on your cloud KMS; the `external_key_id` stays the same.",
 			BodyPath: "external_key_id",
 		},
 		&requestflag.Flag[string]{
@@ -114,6 +119,11 @@ var organizationWorkspacesUpdate = requestflag.WithInnerFlags(cli.Command{
 			Name:     "tags",
 			Usage:    "User-defined tags as string key-value pairs. Keys may not begin with `anthropic`.",
 			BodyPath: "tags",
+		},
+		&requestflag.Flag[string]{
+			Name:     "user-profile-id",
+			Usage:    "ID of a user profile to attach to the Workspace. Every inference request through the Workspace must then name this user profile; the API rejects a request that names none or a different one. Once set, it can't be replaced or removed (sending the same ID again changes nothing); only deleting the user profile clears it. The default Workspace can't have a user profile.",
+			BodyPath: "user_profile_id",
 		},
 	},
 	Action:          handleOrganizationWorkspacesUpdate,
