@@ -10,6 +10,7 @@
 ### Chores
 
 * **ci:** remove unused build upload steps
+* **docs:** update example user ID in Admin API examples
 
 ## [2.3.0](https://github.com/anthropics/anthropic-cli/compare/v2.2.0...v2.3.0) (2026-10-23)
 

@@ -69,7 +69,7 @@ func TestBetaOrganizationWorkspacesMembersAdd(t *testing.T) {
 			"--base-url", mocktest.ServerWithQuery(t, "beta=true"),
 			"beta:organization:workspaces:members", "add",
 			"--workspace-id", "workspace_id",
-			"--user-id", "user_01WCz1FkmYMm4gnmykNKUu3Q",
+			"--user-id", "user_01WxYzAbCdEfGhJkMnPqRsTu",
 			"--workspace-role", "workspace_admin",
 		)
 	})
@@ -77,7 +77,7 @@ func TestBetaOrganizationWorkspacesMembersAdd(t *testing.T) {
 	t.Run("piping data", func(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
-			"user_id: user_01WCz1FkmYMm4gnmykNKUu3Q\n" +
+			"user_id: user_01WxYzAbCdEfGhJkMnPqRsTu\n" +
 			"workspace_role: workspace_admin\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,

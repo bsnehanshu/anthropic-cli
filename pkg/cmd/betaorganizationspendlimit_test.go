@@ -55,7 +55,7 @@ func TestBetaOrganizationSpendLimitsSet(t *testing.T) {
 			"--base-url", mocktest.ServerWithQuery(t, "beta=true"),
 			"beta:organization:spend-limits", "set",
 			"--amount", "50000",
-			"--scope", "{type: user, user_id: user_01WCz1FkmYMm4gnmykNKUu3Q}",
+			"--scope", "{type: user, user_id: user_01WxYzAbCdEfGhJkMnPqRsTu}",
 			"--period", "monthly",
 			"--beta", "message-batches-2024-09-24",
 		)
@@ -67,7 +67,7 @@ func TestBetaOrganizationSpendLimitsSet(t *testing.T) {
 			"amount: '50000'\n" +
 			"scope:\n" +
 			"  type: user\n" +
-			"  user_id: user_01WCz1FkmYMm4gnmykNKUu3Q\n" +
+			"  user_id: user_01WxYzAbCdEfGhJkMnPqRsTu\n" +
 			"period: monthly\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,

@@ -15,7 +15,7 @@ func TestBetaOrganizationAnalyticsUsageList(t *testing.T) {
 			"beta:organization:analytics:usage", "list",
 			"--max-items", "10",
 			"--starting-at", "'2026-09-01T00:00:00Z'",
-			"--actor-id", "user_01WCz1FkmYMm4gnmykNKUu3Q",
+			"--actor-id", "user_01WxYzAbCdEfGhJkMnPqRsTu",
 			"--actor-type", "service_account_actor",
 			"--agent-id", "agent_01VHd3EAGJ6PLkP9LM7DDu3f",
 			"--api-key-id", "apikey_01Rj2N8SVvo6BePZj99NhmiT",

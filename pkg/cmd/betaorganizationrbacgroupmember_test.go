@@ -29,13 +29,13 @@ func TestBetaOrganizationRBACGroupsMembersAdd(t *testing.T) {
 			"--base-url", mocktest.ServerWithQuery(t, "beta=true"),
 			"beta:organization:rbac-groups:members", "add",
 			"--rbac-group-id", "rbac_group_id",
-			"--user-id", "user_01WCz1FkmYMm4gnmykNKUu3Q",
+			"--user-id", "user_01WxYzAbCdEfGhJkMnPqRsTu",
 		)
 	})
 
 	t.Run("piping data", func(t *testing.T) {
 		// Test piping YAML data over stdin
-		pipeData := []byte("user_id: user_01WCz1FkmYMm4gnmykNKUu3Q")
+		pipeData := []byte("user_id: user_01WxYzAbCdEfGhJkMnPqRsTu")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--base-url", mocktest.ServerWithQuery(t, "beta=true"),
