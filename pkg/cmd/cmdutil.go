@@ -86,11 +86,13 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 	//   6. --aws-workspace-id / --aws-region / --aws-api-key-stdin or
 	//      ANTHROPIC_AWS_WORKSPACE_ID / ANTHROPIC_AWS_API_KEY
 	//      (Claude Platform on AWS, AWS credentials or an AWS API key)
-	//   7. profile from active_config → "default" (implicit)
+	//   7. --bedrock-region / --bedrock-api-key-stdin or ANTHROPIC_BEDROCK_REGION
+	//      (Claude in Amazon Bedrock, AWS credentials or a Bedrock API key)
+	//   8. profile from active_config → "default" (implicit)
 	// The explicit/implicit profile split means: a profile you named beats
-	// federation env vars and the Google Cloud and AWS settings (you asked for
-	// it), but those beat a profile that just happened to be lying around in
-	// active_config.
+	// federation env vars and the Google Cloud, AWS and Bedrock settings (you
+	// asked for it), but those beat a profile that just happened to be lying
+	// around in active_config.
 	apiKey, apiKeySet := directCredential("api-key")
 	authToken, authTokenSet := directCredential("auth-token")
 	cfg, profileExplicit := loadProfileIfUsable(root)
@@ -99,6 +101,7 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 	gc := googleCloudFromRoot(root)
 	gcAnySet := gc.AnySet()
 	aw := awsFromRoot(root)
+	bd := amazonBedrockFromRoot(root)
 	extra := extraClientFlagsFromCmd(cmd)
 	customHeaders := customHeadersFromEnv()
 	apiKeySrc, authTokenSrc, envVar := "", "", ""
@@ -111,7 +114,7 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 		envVar = credentialEnvVar(root, "auth-token")
 	}
 	profile, _ := activeProfile(root)
-	warnIfMultipleAuthSources(apiKeySrc, authTokenSrc, cfg != nil && profileExplicit, fedAnySet, gcAnySet, aw.AnySet(), cfg != nil && !profileExplicit, envVar, profile)
+	warnIfMultipleAuthSources(apiKeySrc, authTokenSrc, cfg != nil && profileExplicit, fedAnySet, gcAnySet, aw.AnySet(), bd.AnySet(), cfg != nil && !profileExplicit, envVar, profile)
 
 	useProfile := func() {
 		opts = append(opts, option.WithConfigQuiet(cfg))
@@ -176,6 +179,17 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 		// The AWS options already carry the workspace header.
 		extra.WorkspaceID = ""
 		customHeaders = nil
+	case bd.AnySet():
+		bdOpts, err := bd.requestOptions(context.Background())
+		if err != nil {
+			// TODO: same os.Exit wart as the OAuth resolution failure above.
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		opts = append(opts, bdOpts...)
+		bd.noteIgnoredBaseURL(os.Stderr, extra.BaseURL)
+		extra.BaseURL = ""
+		customHeaders = nil
 	case cfg != nil:
 		useProfile()
 	}
@@ -191,11 +205,11 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 // warnIfMultipleAuthSources emits a one-shot stderr notice when more than one
 // credential source is configured, naming the sources and the precedence
 // winner. No secret values are printed. Order matches the credential
-// precedence (explicit profile beats federation, Google Cloud and AWS;
-// implicit doesn't). apiKeySrc / authTokenSrc are the source labels for those
+// precedence (explicit profile beats federation, Google Cloud, AWS and
+// Bedrock; implicit doesn't). apiKeySrc / authTokenSrc are the source labels for those
 // tiers ("" when unset) so a stdin-supplied credential isn't reported as its
 // env var.
-func warnIfMultipleAuthSources(apiKeySrc, authTokenSrc string, profileExplicit, federation, googleCloud, awsTier, profileImplicit bool, envVar, profile string) {
+func warnIfMultipleAuthSources(apiKeySrc, authTokenSrc string, profileExplicit, federation, googleCloud, awsTier, bedrockTier, profileImplicit bool, envVar, profile string) {
 	type src struct {
 		on   bool
 		name string
@@ -211,6 +225,7 @@ func warnIfMultipleAuthSources(apiKeySrc, authTokenSrc string, profileExplicit, 
 		{federation, "federation env"},
 		{googleCloud, "Google Cloud (--google-cloud-* / ANTHROPIC_GOOGLE_CLOUD_*)"},
 		{awsTier, "AWS (--aws-* / ANTHROPIC_AWS_*)"},
+		{bedrockTier, "Bedrock (--bedrock-* / ANTHROPIC_BEDROCK_REGION)"},
 		{profileImplicit, "active profile (active_config)"},
 	}
 	var on []string

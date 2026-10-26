@@ -15,12 +15,14 @@ var stdinCredentialFlags = []struct{ stdinFlag, target string }{
 	{"api-key-stdin", "api-key"},
 	{"auth-token-stdin", "auth-token"},
 	{"aws-api-key-stdin", "aws-api-key"},
+	{"bedrock-api-key-stdin", "bedrock-api-key"},
 }
 
 var directCredentialEnv = map[string]string{
-	"api-key":     "ANTHROPIC_API_KEY",
-	"auth-token":  "ANTHROPIC_AUTH_TOKEN",
-	"aws-api-key": "ANTHROPIC_AWS_API_KEY",
+	"api-key":         "ANTHROPIC_API_KEY",
+	"auth-token":      "ANTHROPIC_AUTH_TOKEN",
+	"aws-api-key":     "ANTHROPIC_AWS_API_KEY",
+	"bedrock-api-key": "AWS_BEARER_TOKEN_BEDROCK",
 }
 
 // Vars so tests can substitute stdin.

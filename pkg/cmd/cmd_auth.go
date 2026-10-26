@@ -688,6 +688,7 @@ func authStatus(ctx context.Context, c *cli.Command) error {
 	gc := googleCloudFromRoot(root)
 	gcSet := gc.AnySet()
 	aw := awsFromRoot(root)
+	bd := amazonBedrockFromRoot(root)
 
 	// Credential tier mirrors getDefaultRequestOptions exactly. Note that
 	// partial federation config (fed.AnySet() but not fedReady) does NOT
@@ -708,13 +709,15 @@ func authStatus(ctx context.Context, c *cli.Command) error {
 		credWinner = 5
 	case aw.AnySet():
 		credWinner = 6
-	case profileTokenPresent:
+	case bd.AnySet():
 		credWinner = 7
+	case profileTokenPresent:
+		credWinner = 8
 	}
 
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Credentials")
-	if credWinner == 3 || credWinner == 7 {
+	if credWinner == 3 || credWinner == 8 {
 		if who := loggedInSummary(creds.OrganizationName, creds.AccountEmail); who != "" {
 			fmt.Fprintf(out, "  Logged in %s\n", who)
 		}
@@ -748,7 +751,7 @@ func authStatus(ctx context.Context, c *cli.Command) error {
 		} else {
 			profileLabel += " [via active_config]"
 		}
-		writeRow(out, credWinner == 3 || credWinner == 7, profileLabel, formatSecret(creds.AccessToken, true))
+		writeRow(out, credWinner == 3 || credWinner == 8, profileLabel, formatSecret(creds.AccessToken, true))
 		exp := time.Unix(creds.ExpiresAt, 0)
 		writeDetail(out, "expires", fmt.Sprintf("%s (%s)", exp.Format(time.RFC3339), formatRemaining(time.Until(exp))))
 		// Prefer the credentials file's scope (what the live token was granted)
@@ -801,6 +804,14 @@ func authStatus(ctx context.Context, c *cli.Command) error {
 		writeDetail(out, "region", cmp.Or(aw.Region, "(from AWS_REGION or AWS_DEFAULT_REGION)"))
 		writeDetail(out, "workspace_id", cmp.Or(aw.WorkspaceID, "(not set)"))
 	}
+	if bd.AnySet() {
+		if bd.APIKey != "" {
+			writeRow(out, credWinner == 7, "Bedrock (API key, "+bd.apiKeySource(root)+")", formatSecret(bd.APIKey, true))
+		} else {
+			writeRow(out, credWinner == 7, "Bedrock", "AWS credential chain (request signing)")
+		}
+		writeDetail(out, "region", cmp.Or(bd.Region, "(from AWS_REGION or AWS_DEFAULT_REGION)"))
+	}
 
 	// Surface the surprising-override case: the user ran `ant auth login` but
 	// has a credential env var set that silently beats the profile on every
@@ -848,6 +859,9 @@ func authStatus(ctx context.Context, c *cli.Command) error {
 	case credWinner == 6:
 		// Likewise for AWS.
 		baseWinner = 6
+	case credWinner == 7:
+		// Likewise for Bedrock.
+		baseWinner = 7
 	case flagBaseURL != "":
 		baseWinner = 1
 	case envBaseURL != "":
@@ -880,6 +894,13 @@ func authStatus(ctx context.Context, c *cli.Command) error {
 			label = "--aws-base-url / ANTHROPIC_AWS_BASE_URL"
 		}
 		writeRow(out, true, label, cmp.Or(aw.host(), "(set --aws-region)"))
+	}
+	if baseWinner == 7 {
+		label := "Bedrock endpoint"
+		if bd.BaseURL != "" {
+			label = "--bedrock-base-url / ANTHROPIC_BEDROCK_MANTLE_BASE_URL"
+		}
+		writeRow(out, true, label, cmp.Or(bd.host(), "(set --bedrock-region)"))
 	}
 
 	fmt.Fprintln(out)

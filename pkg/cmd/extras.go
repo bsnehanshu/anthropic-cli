@@ -161,5 +161,19 @@ func init() {
 			Usage:   "Override the gateway URL for Claude Platform on AWS, once --aws-region, --aws-workspace-id or an AWS API key has selected it. AWS credentials are sent only here or to the gateway, never to --base-url.",
 			Sources: cli.EnvVars("ANTHROPIC_AWS_BASE_URL"),
 		},
+		&cli.StringFlag{
+			Name:    "bedrock-region",
+			Usage:   "AWS region for Claude in Amazon Bedrock. Setting this or --bedrock-api-key-stdin sends requests to the Bedrock Messages API endpoint, where model IDs carry the anthropic. prefix. Without an API key they are signed with AWS credentials from the default credential chain. Defaults to AWS_REGION, then AWS_DEFAULT_REGION.",
+			Sources: cli.EnvVars("ANTHROPIC_BEDROCK_REGION"),
+		},
+		&cli.BoolFlag{
+			Name:  "bedrock-api-key-stdin",
+			Usage: "Read a Bedrock API key for Claude in Amazon Bedrock from standard input, instead of signing with AWS credentials (or set AWS_BEARER_TOKEN_BEDROCK once --bedrock-region has selected Bedrock). Consumes stdin, so the request body must come from flags.",
+		},
+		&cli.StringFlag{
+			Name:    "bedrock-base-url",
+			Usage:   "Override the endpoint URL for Claude in Amazon Bedrock, once --bedrock-region or --bedrock-api-key-stdin has selected it. AWS credentials are sent only here or to the endpoint, never to --base-url.",
+			Sources: cli.EnvVars("ANTHROPIC_BEDROCK_MANTLE_BASE_URL"),
+		},
 	)
 }

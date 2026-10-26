@@ -23,14 +23,15 @@ const (
 	fakeAWSAPIKey       = "fake-aws-api-key"
 )
 
-// clearAWSEnv unsets every variable the AWS tier and the AWS credential chain
-// read, so a developer machine or CI host with AWS configured can't leak into
-// the tests.
+// clearAWSEnv unsets every variable the AWS and Bedrock tiers and the AWS
+// credential chain read, so a developer machine or CI host with AWS configured
+// can't leak into the tests.
 func clearAWSEnv(t *testing.T) {
 	t.Helper()
 	for _, k := range []string{
 		"AWS_REGION", "AWS_DEFAULT_REGION",
 		"ANTHROPIC_AWS_WORKSPACE_ID", "ANTHROPIC_AWS_API_KEY", "ANTHROPIC_AWS_BASE_URL",
+		"ANTHROPIC_BEDROCK_REGION", "AWS_BEARER_TOKEN_BEDROCK", "ANTHROPIC_BEDROCK_MANTLE_BASE_URL",
 		"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
 		"AWS_PROFILE", "AWS_DEFAULT_PROFILE",
 	} {
@@ -80,7 +81,8 @@ func writeAWSTestProfile(t *testing.T) {
 	require.NoError(t, config.SetActiveProfile(dir, "p"))
 }
 
-// awsTestRoot is googleCloudTestRoot plus the AWS flags and `auth status`.
+// awsTestRoot is googleCloudTestRoot plus the AWS and Bedrock flags and
+// `auth status`.
 func awsTestRoot(action cli.ActionFunc) *cli.Command {
 	root := googleCloudTestRoot(action)
 	root.Flags = append(root.Flags,
@@ -88,6 +90,9 @@ func awsTestRoot(action cli.ActionFunc) *cli.Command {
 		&cli.StringFlag{Name: "aws-workspace-id", Sources: cli.EnvVars("ANTHROPIC_AWS_WORKSPACE_ID")},
 		&cli.BoolFlag{Name: "aws-api-key-stdin"},
 		&cli.StringFlag{Name: "aws-base-url", Sources: cli.EnvVars("ANTHROPIC_AWS_BASE_URL")},
+		&cli.StringFlag{Name: "bedrock-region", Sources: cli.EnvVars("ANTHROPIC_BEDROCK_REGION")},
+		&cli.BoolFlag{Name: "bedrock-api-key-stdin"},
+		&cli.StringFlag{Name: "bedrock-base-url", Sources: cli.EnvVars("ANTHROPIC_BEDROCK_MANTLE_BASE_URL")},
 	)
 	root.Commands = append(root.Commands, &cli.Command{
 		Name: "auth", Commands: []*cli.Command{{Name: "status", Action: authStatus}},

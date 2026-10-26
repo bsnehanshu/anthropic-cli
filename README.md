@@ -96,6 +96,20 @@ ant models list
 
 The same settings are available as `--aws-region` and `--aws-workspace-id`. Either flag, `ANTHROPIC_AWS_WORKSPACE_ID` or an AWS API key selects AWS; `AWS_REGION` and `AWS_PROFILE` on their own don't, since most AWS machines set them for other reasons. The region defaults to `AWS_REGION`, then `AWS_DEFAULT_REGION`. Any credentials the AWS default credential chain finds are used, including `AWS_PROFILE`, environment keys and an IAM role. To use an API key generated in the AWS Console instead, set `ANTHROPIC_AWS_API_KEY` or pipe it to `--aws-api-key-stdin`. The key works only in the region it was generated in, so set the region to match. `ANTHROPIC_API_KEY`, an auth token, a profile named with `--profile` or Google Cloud settings take precedence; `ant auth status` shows which is in use. AWS credentials are sent only to the gateway: `--base-url` and `ANTHROPIC_BASE_URL` are not used, and `--aws-base-url` (`ANTHROPIC_AWS_BASE_URL`) overrides the gateway URL. `ant beta:worker` is not supported on AWS.
 
+### Claude in Amazon Bedrock
+
+Name your region; the CLI then sends requests to the Amazon Bedrock Messages API endpoint, signed with your AWS credentials. Model IDs carry the `anthropic.` prefix there:
+
+```sh
+export ANTHROPIC_BEDROCK_REGION=ap-northeast-1
+ant messages create \
+  --max-tokens 1024 \
+  --message '{role: user, content: "Hello, Claude"}' \
+  --model anthropic.claude-opus-5-5
+```
+
+The same setting is available as `--bedrock-region`. Either it or a key piped to `--bedrock-api-key-stdin` selects Bedrock; `AWS_REGION`, `AWS_PROFILE` and `AWS_BEARER_TOKEN_BEDROCK` on their own don't, since other tools set them for their own use. The region defaults to `AWS_REGION`, then `AWS_DEFAULT_REGION`. Any credentials the AWS default credential chain finds are used, including `AWS_PROFILE`, environment keys and an IAM role. To use a Bedrock API key instead, set `AWS_BEARER_TOKEN_BEDROCK` or pipe it to `--bedrock-api-key-stdin`. `ANTHROPIC_API_KEY`, an auth token, a profile named with `--profile`, Google Cloud settings or Claude Platform on AWS settings take precedence; `ant auth status` shows which is in use. AWS credentials are sent only to the endpoint: `--base-url` and `ANTHROPIC_BASE_URL` are not used, and `--bedrock-base-url` (`ANTHROPIC_BEDROCK_MANTLE_BASE_URL`) overrides the endpoint URL. Bedrock serves the Messages API only (`messages` and `beta:messages`): the other resources, `ant apply` and `ant beta:worker` are not available there.
+
 ## Requirements
 
 macOS, Linux, or Windows.
