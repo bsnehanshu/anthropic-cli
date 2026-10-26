@@ -3,8 +3,10 @@ package core
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/goccy/go-yaml"
@@ -62,9 +64,12 @@ type Candidate struct {
 	// Prose is the markdown after the frontmatter, empty for a YAML file.
 	Prose []byte
 	// Fields are the declared fields: the frontmatter of a markdown file, or
-	// the whole document of a YAML one. The `type` field is removed once the
-	// file is classified.
+	// the whole document of a YAML one. Top-level keys that start with `$` are
+	// dropped on read, and `type` once the file is classified.
 	Fields map[string]any
+	// Annotations names the keys dropped on read, sorted, for a Schema that is
+	// strict about what a file may hold. Their values are not kept.
+	Annotations []string
 	// Name is the default for a resource's `name`: the filename without its
 	// extension, unless the Schema refines it while classifying.
 	Name string
@@ -170,7 +175,26 @@ func (l *Loader) open(abs string) (*Candidate, error) {
 		c.unsupportedExt = fmt.Errorf("%s: unsupported extension (expected .md, .yml, .yaml or .json)", l.keyFor(abs))
 		c.Fields, _ = ParseYAMLMap(content, l.keyFor(abs))
 	}
+	c.Annotations = dropAnnotations(c.Fields)
 	return c, nil
+}
+
+// dropAnnotations removes the top-level keys that start with `$`, such as the
+// `$schema` an editor completes from, and returns their names in order: they
+// describe the file, not the resource. Only the top level is touched, because
+// a tool's `input_schema` is JSON Schema and its `$ref` and `$defs` are part of
+// what is declared.
+func dropAnnotations(fields map[string]any) []string {
+	var dropped []string
+	maps.DeleteFunc(fields, func(key string, _ any) bool {
+		if !strings.HasPrefix(key, "$") {
+			return false
+		}
+		dropped = append(dropped, key)
+		return true
+	})
+	slices.Sort(dropped)
+	return dropped
 }
 
 // defaultName derives a resource name from a filename: "code-reviewer.md"

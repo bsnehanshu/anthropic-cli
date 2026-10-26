@@ -2,6 +2,7 @@ package claude
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -50,6 +51,21 @@ func build(p prose) func(*core.Candidate) (map[string]any, error) {
 // and a file with any other key is far likelier one of those than a new field.
 var vaultFields = []string{"display_name", "metadata"}
 
+// vaultAnnotations are the `$` keys a vault file may carry: the ones an editor
+// reads. Any other counts against the file as a key without the `$` would.
+var vaultAnnotations = []string{"$schema", "$comment"}
+
+// unknownVaultKeys lists, in order, the keys a file holds that a vault file
+// may not.
+func unknownVaultKeys(c *core.Candidate) []string {
+	keys := slices.AppendSeq(slices.Clone(c.Annotations), maps.Keys(c.Fields))
+	keys = slices.DeleteFunc(keys, func(key string) bool {
+		return slices.Contains(vaultFields, key) || slices.Contains(vaultAnnotations, key)
+	})
+	slices.Sort(keys)
+	return keys
+}
+
 // buildVault is a vault's Build: the declared fields are the request body. It
 // is the one file-backed kind with no prose field, so a markdown body has
 // nowhere to go, and the one that does not take its name from the file: a
@@ -68,8 +84,8 @@ func buildVault(c *core.Candidate) (map[string]any, error) {
 	if _, ok := c.Fields["name"]; ok {
 		return nil, fmt.Errorf("%s: a vault is named by `display_name`, not `name`", c.Path)
 	}
-	if unknown := keysWhere(c.Fields, func(key string, _ any) bool { return !slices.Contains(vaultFields, key) }); len(unknown) > 0 {
-		return nil, fmt.Errorf("%s: a vault takes only `display_name` and `metadata`, not %s", c.Path, unknown)
+	if unknown := unknownVaultKeys(c); len(unknown) > 0 {
+		return nil, fmt.Errorf("%s: a vault takes only `display_name` and `metadata`, not `%s`", c.Path, strings.Join(unknown, "`, `"))
 	}
 	if name, _ := c.Fields["display_name"].(string); strings.TrimSpace(name) == "" {
 		return nil, fmt.Errorf("%s: a vault must set `display_name` to a string", c.Path)

@@ -26,6 +26,61 @@ func TestLoadAgentMarkdown(t *testing.T) {
 	assert.NotContains(t, src.Body, "type")
 }
 
+func TestTopLevelDollarKeysAreNotSent(t *testing.T) {
+	// `$schema` is there for the editor. A tool's input_schema is JSON Schema,
+	// so the same keys nested inside it are part of the declaration.
+	const fields = `$schema: https://example.com/agent.json
+$comment: owned by infra
+model: m
+tools:
+  - type: custom
+    name: lookup
+    input_schema:
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $defs: {id: {type: string}}
+      properties: {id: {$ref: "#/$defs/id"}}
+`
+	root := writeTree(t, map[string]string{
+		"agents/a.md":  "---\n" + fields + "---\nprompt\n",
+		"agents/b.yml": fields,
+		"agents/c.json": `{
+  "$schema": "https://example.com/agent.json",
+  "$comment": "owned by infra",
+  "model": "m",
+  "tools": [{
+    "type": "custom",
+    "name": "lookup",
+    "input_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$defs": {"id": {"type": "string"}},
+      "properties": {"id": {"$ref": "#/$defs/id"}}
+    }
+  }]
+}`,
+		"environments/only-schema.yml": "$schema: https://example.com/environment.json\n",
+	})
+	l := core.NewLoader(Registry(), root, nil)
+	require.NoError(t, l.Add(context.Background(), []string{root}))
+
+	for _, key := range []string{"./agents/a.md", "./agents/b.yml", "./agents/c.json"} {
+		body, err := planBody(t, l, key)
+		require.NoError(t, err, key)
+		assert.NotContains(t, body, "$schema", key)
+		assert.NotContains(t, body, "$comment", key)
+		assert.Equal(t, []any{map[string]any{
+			"type": "custom",
+			"name": "lookup",
+			"input_schema": map[string]any{
+				"$schema":    "https://json-schema.org/draft/2020-12/schema",
+				"$defs":      map[string]any{"id": map[string]any{"type": "string"}},
+				"properties": map[string]any{"id": map[string]any{"$ref": "#/$defs/id"}},
+			},
+		}}, body["tools"], key)
+	}
+	assert.NotContains(t, l.Sources(), "./environments/only-schema.yml",
+		"a walked file that declares nothing else is passed over, as an empty one is")
+}
+
 func TestLoadAgentRejectsDuplicateSystemPrompt(t *testing.T) {
 	root := writeTree(t, map[string]string{
 		"agents/a.md": "---\nmodel: m\nsystem: from frontmatter\n---\n\nfrom the body\n",

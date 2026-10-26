@@ -20,6 +20,7 @@
 
 ### Bug Fixes
 
+* **apply:** ignore top-level keys that start with `$`, such as `$schema`, in resource files and included data files; a vault file may carry only `$schema` and `$comment`
 * **cli:** escape terminal control sequences in rendered output
 
 
