@@ -15,6 +15,7 @@ func TestOrganizationExternalKeysCreate(t *testing.T) {
 			"--provider-config", "{kms_arn: arn:aws:kms:us-east-1:111122223333:key/abcd1234-5678-90ab-cdef-000011112222, type: aws, region: us-east-1}",
 			"--display-name", "x",
 			"--geo", "us",
+			"--user-profile-id", "uprof_01SDCCSbTxrXDpWc1phhtcfK",
 		)
 	})
 
@@ -26,7 +27,8 @@ func TestOrganizationExternalKeysCreate(t *testing.T) {
 			"  type: aws\n" +
 			"  region: us-east-1\n" +
 			"display_name: x\n" +
-			"geo: us\n")
+			"geo: us\n" +
+			"user_profile_id: uprof_01SDCCSbTxrXDpWc1phhtcfK\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"organization:external-keys", "create",

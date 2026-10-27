@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.4.0](https://github.com/anthropics/anthropic-cli/compare/v2.3.0...v2.4.0) (2026-10-26)
+
+### Features
+
+* **api:** add user_profile_id to External Keys and Workspaces
+
+
+### Bug Fixes
+
+* **client:** honor ANTHROPIC_CUSTOM_HEADERS in API requests
+
+
+### Chores
+
+* bump go sdk to v2.4.0
+* **ci:** remove unused build upload steps
+* **docs:** update example user ID in Admin API examples
+
 ## [2.3.0](https://github.com/anthropics/anthropic-cli/compare/v2.2.0...v2.3.0) (2026-10-23)
 
 ### Features
@@ -9,6 +27,7 @@
 
 ### Bug Fixes
 
+* **apply:** ignore top-level keys that start with `$`, such as `$schema`, in resource files and included data files; a vault file may carry only `$schema` and `$comment`
 * **cli:** escape terminal control sequences in rendered output
 
 

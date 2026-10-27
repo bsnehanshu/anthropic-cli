@@ -200,6 +200,15 @@ func TestAWSTier(t *testing.T) {
 		assertSigV4Request(t, req, "us-east-1", "wrkspc_aws")
 	})
 
+	t.Run("ANTHROPIC_CUSTOM_HEADERS is not sent", func(t *testing.T) {
+		setupAWSTest(t)
+		useFakeAWSCredentials(t, "")
+		t.Setenv("ANTHROPIC_CUSTOM_HEADERS", "X-Custom: one\nAuthorization: Bearer from-headers")
+		req := runAWSLeaf(t, "--aws-region", "us-east-1", "--aws-workspace-id", "wrkspc_01")
+		assertSigV4Request(t, req, "us-east-1", "wrkspc_01")
+		assert.Empty(t, req.Header.Get("X-Custom"))
+	})
+
 	t.Run("--aws-base-url replaces the gateway", func(t *testing.T) {
 		setupAWSTest(t)
 		useFakeAWSCredentials(t, "")

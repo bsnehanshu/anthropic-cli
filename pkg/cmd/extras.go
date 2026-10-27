@@ -4,6 +4,9 @@ package cmd
 // must survive a regen lives here rather than in the generated files.
 
 import (
+	"os"
+	"strings"
+
 	"github.com/anthropics/anthropic-sdk-go/v2/option"
 	"github.com/urfave/cli/v3"
 )
@@ -41,6 +44,18 @@ func (o extraClientFlags) requestOptions() []option.RequestOption {
 	}
 	if o.BaseURL != "" {
 		opts = append(opts, option.WithBaseURL(o.BaseURL))
+	}
+	return opts
+}
+
+// customHeadersFromEnv reads ANTHROPIC_CUSTOM_HEADERS, which
+// WithoutEnvironmentDefaults keeps the SDK from reading.
+func customHeadersFromEnv() []option.RequestOption {
+	var opts []option.RequestOption
+	for _, line := range strings.Split(os.Getenv("ANTHROPIC_CUSTOM_HEADERS"), "\n") {
+		if name, value, ok := strings.Cut(line, ":"); ok {
+			opts = append(opts, option.WithHeader(strings.TrimSpace(name), strings.TrimSpace(value)))
+		}
 	}
 	return opts
 }

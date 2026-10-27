@@ -135,7 +135,9 @@ func isDataFile(path string) bool {
 // readIncluded decodes one data file into the objects it contributes: a
 // document that is a single mapping contributes one, a sequence contributes
 // each of its elements, and every element must itself be a mapping because
-// that is what the list it lands in holds.
+// that is what the list it lands in holds. A single mapping is the top level
+// of its file, so it sheds its annotations as a resource file does; with no
+// keys left it contributes nothing, as an empty file does.
 func readIncluded(path string) ([]any, error) {
 	if !isDataFile(path) {
 		return nil, fmt.Errorf("unsupported extension (expected .yml, .yaml or .json)")
@@ -153,6 +155,12 @@ func readIncluded(path string) ([]any, error) {
 	}
 	items, ok := doc.([]any)
 	if !ok {
+		if fields, isMap := doc.(map[string]any); isMap {
+			dropAnnotations(fields)
+			if len(fields) == 0 {
+				return nil, nil
+			}
+		}
 		items = []any{doc}
 	}
 	for i, item := range items {

@@ -75,7 +75,6 @@ jobs:
     name: build
     permissions:
       contents: read
-      id-token: write
       pull-requests: read
     runs-on: ${{ github.repository == 'anthropics/anthropic-cli' && 'ubuntu-latest' || 'sdk-ubuntu-latest-16-core' }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork

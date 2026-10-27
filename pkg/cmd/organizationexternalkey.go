@@ -33,6 +33,11 @@ var organizationExternalKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Data residency geo. Only `us` is supported.",
 			BodyPath: "geo",
 		},
+		&requestflag.Flag[*string]{
+			Name:     "user-profile-id",
+			Usage:    "ID of a user profile to bind the key to. Omit this field for a key that isn't bound to a user profile. Such a key can be attached to a Workspace whatever its user profile. The binding cannot be changed later. A key bound to a user profile can only be attached to a Workspace that has the same user profile.",
+			BodyPath: "user_profile_id",
+		},
 	},
 	Action:          handleOrganizationExternalKeysCreate,
 	HideHelpCommand: true,
@@ -55,7 +60,7 @@ var organizationExternalKeysCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "provider-config.kms-arn",
-			Usage:      "Full ARN of the AWS KMS key. On Claude Platform on AWS the key must be a single-Region key in your organization's own AWS account; cross-account keys, multi-Region keys, and alias ARNs are rejected.",
+			Usage:      "Full ARN of the AWS KMS key. On Claude Platform on AWS, alias ARNs are rejected, and your organization's own key must be a single-Region key in your organization's AWS account.",
 			InnerField: "kms_arn",
 		},
 		&requestflag.InnerFlag[*string]{
@@ -140,7 +145,7 @@ var organizationExternalKeysUpdate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[string]{
 			Name:       "provider-config.kms-arn",
-			Usage:      "Full ARN of the AWS KMS key. On Claude Platform on AWS the key must be a single-Region key in your organization's own AWS account; cross-account keys, multi-Region keys, and alias ARNs are rejected.",
+			Usage:      "Full ARN of the AWS KMS key. On Claude Platform on AWS, alias ARNs are rejected, and your organization's own key must be a single-Region key in your organization's AWS account.",
 			InnerField: "kms_arn",
 		},
 		&requestflag.InnerFlag[*string]{

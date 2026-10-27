@@ -72,6 +72,68 @@ func TestWalkSkipsAFileInVaultsThatIsNotShapedLikeAVault(t *testing.T) {
 	assert.Empty(t, plan.Warnings)
 }
 
+func TestVaultFileMayCarryASchemaKey(t *testing.T) {
+	// A vault takes no key beyond its own two, but `$schema` is not a field.
+	const file = "$schema: https://example.com/vault.json\ndisplay_name: sentry\n"
+	want := map[string]any{"display_name": "sentry"}
+
+	h := newHarness(t, map[string]string{"vaults/walked.yml": file})
+	plan := h.plan()
+	require.Len(t, plan.Changes, 1)
+	assert.Equal(t, "./vaults/walked.yml", plan.Changes[0].Key)
+	assert.Equal(t, want, plan.Changes[0].Desired)
+
+	root := writeTree(t, map[string]string{"vaults/named.yml": file})
+	l := core.NewLoader(Registry(), root, nil)
+	require.NoError(t, l.Add(context.Background(), []string{filepath.Join(root, "vaults/named.yml")}))
+	body, err := planBody(t, l, "./vaults/named.yml")
+	require.NoError(t, err)
+	assert.Equal(t, want, body)
+}
+
+func TestWalkSkipsAFileInVaultsWithAnyOtherDollarKey(t *testing.T) {
+	// Only what an editor reads is let through. Another tool's `$` key says the
+	// file is that tool's as plainly as a key without the `$` does.
+	files := map[string]string{
+		"vaults/prod.yml":      "$vault_password: hunter2\ndisplay_name: prod\nmetadata:\n  db_password: hunter2\n",
+		"vaults/prod.json":     `{"$vault_password": "hunter2", "display_name": "prod"}`,
+		"vaults/prod.md":       "---\n$vault_password: hunter2\ndisplay_name: prod\n---\n",
+		"vaults/both.yml":      "$schema: https://example.com/vault.json\n$vault_password: hunter2\ndisplay_name: prod\n",
+		"vaults/annotated.yml": "$schema: https://example.com/vault.json\n$comment: for the editor\ndisplay_name: sentry\n",
+	}
+	plan := newHarness(t, files).plan()
+	var keys []string
+	for _, c := range plan.Changes {
+		keys = append(keys, c.Key)
+	}
+	assert.Equal(t, []string{"./vaults/annotated.yml"}, keys)
+	assert.Empty(t, plan.Warnings)
+
+	root := writeTree(t, files)
+	found, err := core.NewLoader(Registry(), root, nil).Discover(root)
+	require.NoError(t, err)
+	assert.Equal(t, []core.Found{{Key: "./vaults/annotated.yml", Kind: KindVault}}, found, "nor is it offered for tracking")
+}
+
+func TestNamedVaultFileIsRefusedForAnyOtherDollarKey(t *testing.T) {
+	for name, tc := range map[string]struct{ path, file, want string }{
+		"in vaults":        {"vaults/prod.yml", "$vault_password: hunter2\ndisplay_name: prod\nmetadata:\n  db_password: hunter2\n", "not `$vault_password`"},
+		"beside $schema":   {"vaults/prod.yml", "$schema: https://example.com/vault.json\n$vault_password: hunter2\ndisplay_name: prod\n", "not `$vault_password`"},
+		"beside other key": {"vaults/prod.yml", "$vault_password: hunter2\ndb_password: hunter2\ndisplay_name: prod\n", "not `$vault_password`, `db_password`"},
+		"nothing else":     {"vaults/prod.yml", "$vault_password: hunter2\n", "not `$vault_password`"},
+		"json":             {"vaults/prod.json", `{"$vault_password": "hunter2", "display_name": "prod"}`, "not `$vault_password`"},
+		"frontmatter":      {"vaults/prod.md", "---\n$vault_password: hunter2\ndisplay_name: prod\n---\n", "not `$vault_password`"},
+		"typed elsewhere":  {"infra/prod.yml", "type: vault\n$vault_password: hunter2\ndisplay_name: prod\n", "not `$vault_password`"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			root := writeTree(t, map[string]string{tc.path: tc.file})
+			err := core.NewLoader(Registry(), root, nil).Add(context.Background(), []string{filepath.Join(root, tc.path)})
+			require.ErrorContains(t, err, "a vault takes only `display_name` and `metadata`, "+tc.want)
+			assert.NotContains(t, err.Error(), "hunter2")
+		})
+	}
+}
+
 func TestNamedVaultFileIsRefusedByKeyNotValue(t *testing.T) {
 	// Named outright, a file is held to being a vault, and told what is wrong
 	// with it in keys, never values.

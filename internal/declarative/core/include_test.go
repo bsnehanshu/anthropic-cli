@@ -62,6 +62,51 @@ func TestIncludeGlobIsAFilterInStableOrder(t *testing.T) {
 	}, body["parts"])
 }
 
+func TestIncludedMappingDropsItsTopLevelDollarKeys(t *testing.T) {
+	body, err := loadGadget(t, map[string]string{
+		"gadgets/g.md": "---\nparts:\n  - ./parts/one.yml\n  - ./parts/many.yml\n---\nprose\n",
+		"gadgets/parts/one.yml": `$schema: https://example.com/part.json
+name: a
+spec:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $defs: {id: {type: string}}
+`,
+		// An element of a list is not the top level of its file.
+		"gadgets/parts/many.yml": "- name: b\n  $ref: kept\n",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, []any{
+		map[string]any{"name": "a", "spec": map[string]any{
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"$defs":   map[string]any{"id": map[string]any{"type": "string"}},
+		}},
+		map[string]any{"name": "b", "$ref": "kept"},
+	}, body["parts"])
+}
+
+func TestIncludedFileWithNothingToDeclareContributesNothing(t *testing.T) {
+	body, err := loadGadget(t, map[string]string{
+		"gadgets/g.md": `---
+parts:
+  - {name: first}
+  - ./parts/blank.yml
+  - ./parts/stub.yml
+  - ./parts/braces.json
+  - {name: last}
+---
+prose
+`,
+		"gadgets/parts/blank.yml":   "\n",
+		"gadgets/parts/stub.yml":    "$schema: https://example.com/part.json\n",
+		"gadgets/parts/braces.json": "{}\n",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, []any{
+		map[string]any{"name": "first"},
+		map[string]any{"name": "last"},
+	}, body["parts"])
+}
+
 func TestIncludeLeavesAListWithNoPathsAlone(t *testing.T) {
 	body, err := loadGadget(t, map[string]string{
 		"gadgets/g.md": "---\nparts:\n  - {name: only}\n---\nprose\n",

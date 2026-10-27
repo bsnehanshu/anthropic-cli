@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/anthropics/anthropic-cli/v2/internal/declarative/core"
@@ -102,7 +101,7 @@ func (schema) Classify(c *core.Candidate, walked bool) (core.Kind, error) {
 	// a walk takes a file there for a vault only when it is shaped like one, and
 	// passes over one that is not. Named outright, such a file is told what is
 	// wrong in keys and never values, here and in buildVault.
-	if walked && fromDir && dirKind == KindVault && !shapedLikeVault(c.Fields) {
+	if walked && fromDir && dirKind == KindVault && !shapedLikeVault(c) {
 		return "", nil
 	}
 	if declared {
@@ -135,18 +134,11 @@ func (schema) Classify(c *core.Candidate, walked bool) (core.Kind, error) {
 		c.Path, kindNames(), filepath.Base(c.Path))
 }
 
-// shapedLikeVault reports whether a file's fields are what a vault declares and
+// shapedLikeVault reports whether a file holds what a vault declares and
 // nothing else: a written `display_name`, and at most `metadata` beside it.
-func shapedLikeVault(fields map[string]any) bool {
-	if _, ok := fields["display_name"]; !ok {
-		return false
-	}
-	for key := range fields {
-		if !slices.Contains(vaultFields, key) {
-			return false
-		}
-	}
-	return true
+func shapedLikeVault(c *core.Candidate) bool {
+	_, named := c.Fields["display_name"]
+	return named && len(unknownVaultKeys(c)) == 0
 }
 
 // inVaultsDir reports whether a file sits in a directory named for vaults,
