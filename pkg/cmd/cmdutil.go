@@ -100,6 +100,7 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 	gcAnySet := gc.AnySet()
 	aw := awsFromRoot(root)
 	extra := extraClientFlagsFromCmd(cmd)
+	customHeaders := customHeadersFromEnv()
 	apiKeySrc, authTokenSrc, envVar := "", "", ""
 	if apiKeySet {
 		apiKeySrc = credentialSourceLabel(root, "api-key")
@@ -161,6 +162,7 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 		opts = append(opts, gcOpts...)
 		gc.noteIgnoredBaseURL(os.Stderr, extra.BaseURL)
 		extra.BaseURL = ""
+		customHeaders = nil
 	case aw.AnySet():
 		awsOpts, err := aw.requestOptions(context.Background())
 		if err != nil {
@@ -173,9 +175,11 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 		extra.BaseURL = ""
 		// The AWS options already carry the workspace header.
 		extra.WorkspaceID = ""
+		customHeaders = nil
 	case cfg != nil:
 		useProfile()
 	}
+	opts = append(opts, customHeaders...)
 
 	// Appended last so an explicit --base-url wins over any base URL the
 	// loaded config may have set.

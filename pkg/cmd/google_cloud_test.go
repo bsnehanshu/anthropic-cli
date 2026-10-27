@@ -196,6 +196,14 @@ func TestGoogleCloudTier(t *testing.T) {
 		})
 	}
 
+	t.Run("ANTHROPIC_CUSTOM_HEADERS is not sent", func(t *testing.T) {
+		setup(t)
+		t.Setenv("ANTHROPIC_CUSTOM_HEADERS", "X-Custom: one\nAuthorization: Bearer from-headers")
+		req := runGoogleCloudLeaf(t, "--google-cloud-project", "my-project", "--google-cloud-workspace-id", "wrkspc_01")
+		assertGoogleCloudRequest(t, req, "my-project", "global", "wrkspc_01")
+		assert.Empty(t, req.Header.Get("X-Custom"))
+	})
+
 	t.Run("a base URL without a scheme is refused before any request", func(t *testing.T) {
 		setup(t)
 		_, err := googleCloud{BaseURL: "gateway.invalid"}.requestOptions(context.Background())

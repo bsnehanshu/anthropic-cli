@@ -7,6 +7,11 @@
 * **api:** add user_profile_id to External Keys and Workspaces
 
 
+### Bug Fixes
+
+* **client:** honor ANTHROPIC_CUSTOM_HEADERS in API requests
+
+
 ### Chores
 
 * **ci:** remove unused build upload steps

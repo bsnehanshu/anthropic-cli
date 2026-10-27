@@ -121,7 +121,7 @@ func clearCredentialEnv(t *testing.T) {
 		"ANTHROPIC_BASE_URL", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN",
 		"ANTHROPIC_PROFILE", "ANTHROPIC_IDENTITY_TOKEN", "ANTHROPIC_IDENTITY_TOKEN_FILE",
 		"ANTHROPIC_FEDERATION_RULE_ID", "ANTHROPIC_ORGANIZATION_ID",
-		"ANTHROPIC_SERVICE_ACCOUNT_ID", "ANTHROPIC_WORKSPACE_ID",
+		"ANTHROPIC_SERVICE_ACCOUNT_ID", "ANTHROPIC_WORKSPACE_ID", "ANTHROPIC_CUSTOM_HEADERS",
 	} {
 		clearEnv(t, k)
 	}
@@ -152,6 +152,56 @@ func TestWorkspaceHeaderIgnoresLocalFlag(t *testing.T) {
 		t.Setenv("ANTHROPIC_API_KEY", "k")
 		req := runShadowedLeaf(t, "leaf", "--workspace-id", "wrkspc_path")
 		assert.Empty(t, req.Header.Get("anthropic-workspace-id"))
+	})
+}
+
+func TestCustomHeadersEnv(t *testing.T) {
+	setup := func(t *testing.T, headers string) {
+		clearCredentialEnv(t)
+		resetWarnOnce(t)
+		t.Setenv("ANTHROPIC_CUSTOM_HEADERS", headers)
+	}
+
+	t.Run("each line with a colon is a header", func(t *testing.T) {
+		setup(t, "X-Custom: one\nnot a header\n  X-Time :  12:30  ")
+		t.Setenv("ANTHROPIC_API_KEY", "k")
+		req := runShadowedLeaf(t, "leaf")
+		assert.Equal(t, "one", req.Header.Get("X-Custom"))
+		assert.Equal(t, "12:30", req.Header.Get("X-Time"))
+		assert.Equal(t, "Bearer k", req.Header.Get("Authorization"))
+	})
+
+	t.Run("a line replaces a default header", func(t *testing.T) {
+		setup(t, "User-Agent: custom-agent")
+		t.Setenv("ANTHROPIC_API_KEY", "k")
+		assert.Equal(t, "custom-agent", runShadowedLeaf(t, "leaf").Header.Get("User-Agent"))
+	})
+
+	t.Run("an Authorization line beats ANTHROPIC_API_KEY", func(t *testing.T) {
+		setup(t, "Authorization: Bearer from-headers")
+		t.Setenv("ANTHROPIC_API_KEY", "k")
+		assert.Equal(t, "Bearer from-headers", runShadowedLeaf(t, "leaf").Header.Get("Authorization"))
+	})
+
+	t.Run("an Authorization line beats a profile", func(t *testing.T) {
+		setup(t, "Authorization: Bearer from-headers")
+		dir := os.Getenv("ANTHROPIC_CONFIG_DIR")
+		require.NoError(t, config.SaveProfile(dir, "p", &config.Config{
+			AuthenticationInfo: &config.AuthenticationInfo{
+				Type: config.AuthenticationTypeUserOAuth, UserOAuth: &config.UserOAuth{ClientID: "c"},
+			},
+		}))
+		require.NoError(t, config.WriteCredentials(config.ProfileCredentialsPath(dir, "p"),
+			config.Credentials{AccessToken: "tok", RefreshToken: "rt"}))
+		require.NoError(t, config.SetActiveProfile(dir, "p"))
+		assert.Equal(t, "Bearer from-headers", runShadowedLeaf(t, "leaf").Header.Get("Authorization"))
+	})
+
+	t.Run("--workspace-id beats a line", func(t *testing.T) {
+		setup(t, "anthropic-workspace-id: wrkspc_headers")
+		t.Setenv("ANTHROPIC_API_KEY", "k")
+		req := runShadowedLeaf(t, "--workspace-id", "wrkspc_flag", "leaf")
+		assert.Equal(t, "wrkspc_flag", req.Header.Get("anthropic-workspace-id"))
 	})
 }
 
