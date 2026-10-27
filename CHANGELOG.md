@@ -14,6 +14,7 @@
 
 ### Chores
 
+* bump go sdk to v2.4.0
 * **ci:** remove unused build upload steps
 * **docs:** update example user ID in Admin API examples
 
